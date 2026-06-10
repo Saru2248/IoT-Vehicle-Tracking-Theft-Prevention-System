@@ -255,13 +255,28 @@ function initControls() {
     addLog(d.status === 'ok' ? 'Discord alert sent!' : 'Discord: ' + d.message, d.status === 'ok' ? 'info' : 'alert');
   });
 
-  document.getElementById('btn-export-csv').addEventListener('click', () => window.open('/api/export_csv', '_blank'));
+  document.getElementById('btn-export-csv').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = '/api/export_csv';
+    a.download = 'location_history.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
 
   document.getElementById('btn-pdf').addEventListener('click', async () => {
     addLog('Generating PDF report…', 'info');
     const r = await fetch('/api/generate_pdf', { method: 'POST' });
     const d = await r.json();
-    if (d.status === 'success') { addLog('PDF ready! Downloading…', 'info'); window.open(d.download_url, '_blank'); }
+    if (d.status === 'success') {
+      addLog('PDF ready! Downloading…', 'info');
+      const a = document.createElement('a');
+      a.href = d.download_url;
+      a.download = 'vehicle_tracking_report.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
     else addLog('PDF error: ' + d.message, 'alert');
   });
 
