@@ -3,7 +3,6 @@ import requests as http
 from flask import Flask, jsonify, request, send_from_directory, send_file
 from python_simulation.simulation_engine import VehicleSimulator, FleetManager
 from python_simulation.report_generator import generate_pdf_report
-
 app = Flask(__name__, static_folder='dashboard', static_url_path='')
 
 CSV_PATH  = "data/location_history.csv"
