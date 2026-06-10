@@ -8,6 +8,11 @@ app = Flask(__name__, static_folder='dashboard', static_url_path='')
 CSV_PATH  = "data/location_history.csv"
 PDF_PATH  = "outputs/location_report.pdf"
 
+# Ensure writable directories exist at import time (required when running
+# under gunicorn where the __main__ block below does NOT execute)
+os.makedirs("data", exist_ok=True)
+os.makedirs("outputs", exist_ok=True)
+
 simulator = VehicleSimulator(log_filepath=CSV_PATH)
 fleet     = FleetManager()
 
@@ -169,9 +174,8 @@ def download_pdf():
     return jsonify({"status": "error", "message": "Generate PDF first"}), 404
 
 if __name__ == '__main__':
-    os.makedirs("data", exist_ok=True)
-    os.makedirs("outputs", exist_ok=True)
+    port = int(os.environ.get("PORT", 5000))
     print("=" * 52)
-    print("  IoT Vehicle Tracking System  ->  http://127.0.0.1:5000")
+    print(f"  IoT Vehicle Tracking System  ->  http://0.0.0.0:{port}")
     print("=" * 52)
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=port)

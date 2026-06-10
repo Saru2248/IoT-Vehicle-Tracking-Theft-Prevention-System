@@ -11,9 +11,11 @@ env/
 .vscode/
 .idea/
 
-# Local databases and reports
-data/
-outputs/
+# Local databases and reports — ignore contents but keep the folders
+data/*
+outputs/*
+!data/.gitkeep
+!outputs/.gitkeep
 *.pdf
 *.csv
 
