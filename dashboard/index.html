@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TrackSafe IoT – Vehicle Tracking & Theft Prevention</title>
+  <meta name="description" content="IoT Vehicle Tracking, Geofencing & Theft Prevention System with Fleet Management, Analytics, and Live Map.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-wrap">
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <i class="fa-solid fa-satellite-dish brand-icon"></i>
+      <h2>TrackSafe<span>IoT</span></h2>
+    </div>
+
+    <nav class="nav-menu">
+      <button class="nav-item active" data-tab="tab-monitor">
+        <i class="fa-solid fa-gauge-high"></i> Live Monitor
+      </button>
+      <button class="nav-item" data-tab="tab-fleet">
+        <i class="fa-solid fa-truck-fast"></i> Fleet View
+      </button>
+      <button class="nav-item" data-tab="tab-analytics">
+        <i class="fa-solid fa-chart-line"></i> Analytics
+      </button>
+      <button class="nav-item" data-tab="tab-geofence">
+        <i class="fa-solid fa-draw-polygon"></i> Geofence Mgr
+      </button>
+      <button class="nav-item" data-tab="tab-settings">
+        <i class="fa-solid fa-sliders"></i> Settings
+      </button>
+      <button class="nav-item" data-tab="tab-wiring">
+        <i class="fa-solid fa-diagram-project"></i> Wiring Guide
+      </button>
+      <button class="nav-item" data-tab="tab-interview">
+        <i class="fa-solid fa-graduation-cap"></i> Interview Prep
+      </button>
+    </nav>
+
+    <div class="sidebar-status">
+      <div class="dot-row"><span class="pulse-dot green"></span><span>Server ON</span></div>
+      <div class="dot-row"><span class="pulse-dot blue" id="dot-voice"></span><span>Voice Alerts</span></div>
+      <p class="uptime-label">Updates every 1 s</p>
+    </div>
+  </aside>
+
+  <!-- ══════════════ MAIN ══════════════ -->
+  <main class="main-area">
+
+    <!-- Header -->
+    <header class="main-header">
+      <div>
+        <h1>IoT Vehicle Tracking &amp; Theft Prevention</h1>
+        <p class="sub">Virtual Simulation Engine &amp; Hardware Controller Hub</p>
+      </div>
+      <div class="hdr-right">
+        <button class="btn btn-ghost" id="btn-theme" title="Toggle light/dark">
+          <i class="fa-solid fa-circle-half-stroke"></i>
+        </button>
+        <button class="btn btn-ghost" id="btn-voice" title="Toggle voice alerts">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+        <button class="btn btn-ghost" id="btn-playback">
+          <i class="fa-solid fa-clapperboard"></i> Playback
+        </button>
+        <button class="btn btn-secondary" id="btn-export-csv">
+          <i class="fa-solid fa-file-csv"></i> CSV
+        </button>
+        <button class="btn btn-primary" id="btn-pdf">
+          <i class="fa-solid fa-file-pdf"></i> PDF Report
+        </button>
+      </div>
+    </header>
+
+    <!-- ════ TAB 1 – LIVE MONITOR ════ -->
+    <section class="tab active" id="tab-monitor">
+
+      <!-- Metrics Row -->
+      <div class="metrics-grid">
+        <div class="metric-card" id="mc-status">
+          <div class="mc-top"><span class="mc-lbl">VEHICLE STATUS</span><i class="fa-solid fa-car mc-icon orange"></i></div>
+          <div class="mc-val" id="val-status">Parked</div>
+          <div class="mc-foot text-muted" id="val-ts">--</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-top"><span class="mc-lbl">SPEED</span><i class="fa-solid fa-gauge-high mc-icon blue"></i></div>
+          <div class="mc-val"><span id="val-speed">0.0</span><span class="unit"> km/h</span></div>
+          <div class="mc-foot"><span class="text-muted">Limit:</span> <span id="val-limit">80</span> km/h</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-top"><span class="mc-lbl">SECURITY ALERT</span><i class="fa-solid fa-shield-halved mc-icon green"></i></div>
+          <div class="mc-val" id="val-alert">Secure</div>
+          <div class="mc-foot text-muted" id="val-dist">Geofence: Inside</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-top"><span class="mc-lbl">THEFT RISK</span><i class="fa-solid fa-triangle-exclamation mc-icon red"></i></div>
+          <div class="risk-wrap">
+            <div class="risk-bar-bg"><div class="risk-bar" id="risk-bar"></div></div>
+            <span class="mc-val small" id="val-risk">0%</span>
+          </div>
+          <div class="mc-foot text-muted" id="val-risk-lbl">Low</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-top"><span class="mc-lbl">TRIP DISTANCE</span><i class="fa-solid fa-road mc-icon purple"></i></div>
+          <div class="mc-val"><span id="val-trip">0.00</span><span class="unit"> km</span></div>
+          <div class="mc-foot text-muted">Since last reset</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-top"><span class="mc-lbl">DRIVER SCORE</span><i class="fa-solid fa-star mc-icon yellow"></i></div>
+          <div class="mc-val"><span id="val-dscore">100</span><span class="unit">/100</span></div>
+          <div class="mc-foot text-muted">Braking: <span id="val-brake">0</span> &nbsp;|&nbsp; Overspeed: <span id="val-over">0</span></div>
+        </div>
+      </div>
+
+      <!-- OBD-II row -->
+      <div class="obd-row">
+        <div class="obd-card"><i class="fa-solid fa-gas-pump obd-icon"></i><div class="obd-body"><span class="obd-lbl">Fuel</span><div class="obd-bar-bg"><div class="obd-bar fuel-bar" id="obd-fuel-bar"></div></div><span id="obd-fuel">--</span>%</div></div>
+        <div class="obd-card"><i class="fa-solid fa-battery-three-quarters obd-icon blue"></i><div class="obd-body"><span class="obd-lbl">Battery</span><span class="obd-val" id="obd-batt">--</span> V</div></div>
+        <div class="obd-card"><i class="fa-solid fa-gauge obd-icon orange"></i><div class="obd-body"><span class="obd-lbl">RPM</span><span class="obd-val" id="obd-rpm">0</span></div></div>
+        <div class="obd-card"><i class="fa-solid fa-temperature-half obd-icon red"></i><div class="obd-body"><span class="obd-lbl">Eng. Temp</span><span class="obd-val" id="obd-temp">--</span> °C</div></div>
+        <div class="obd-card"><i class="fa-solid fa-circle-notch obd-icon green"></i><div class="obd-body"><span class="obd-lbl">Engine Load</span><span class="obd-val" id="obd-load">--</span> %</div></div>
+        <div class="obd-card"><i class="fa-solid fa-location-arrow obd-icon purple"></i><div class="obd-body"><span class="obd-lbl">Heading</span><span class="obd-val" id="obd-head">--</span>°</div></div>
+      </div>
+
+      <!-- Body -->
+      <div class="monitor-body">
+        <!-- Controls column -->
+        <div class="ctrl-col">
+          <div class="panel">
+            <h3><i class="fa-solid fa-sliders"></i> Simulation Controls</h3>
+            <p class="sec-desc">Select a scenario to test tracking & security logic.</p>
+            <div class="ctrl-grid">
+              <button class="btn-ctrl active" data-mode="parked"><i class="fa-solid fa-square-parking"></i><span>Parked</span></button>
+              <button class="btn-ctrl" data-mode="driving"><i class="fa-solid fa-road"></i><span>Driving</span></button>
+              <button class="btn-ctrl" data-mode="stolen"><i class="fa-solid fa-truck-pickup"></i><span>Stolen</span></button>
+              <button class="btn-ctrl" data-mode="geofence_breach"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Geofence Breach</span></button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3><i class="fa-solid fa-bolt"></i> Remote Actions</h3>
+            <div class="toggle-row">
+              <div><h4>Engine Immobilizer</h4><p class="tiny-desc">Cut off ignition circuit remotely.</p></div>
+              <label class="sw"><input type="checkbox" id="imm-toggle"><span class="sw-slider"></span></label>
+            </div>
+            <div class="immobanner hidden" id="imm-banner"><i class="fa-solid fa-lock"></i> ENGINE CIRCUIT IMMOBILIZED</div>
+            <div class="remote-btns">
+              <button class="btn btn-warn" id="btn-tg"><i class="fa-brands fa-telegram"></i> Send Telegram</button>
+              <button class="btn btn-warn" id="btn-dc"><i class="fa-brands fa-discord"></i> Send Discord</button>
+            </div>
+          </div>
+
+          <div class="panel state-panel">
+            <h3><i class="fa-solid fa-key"></i> Sensor States</h3>
+            <div class="badge-row">
+              <div class="state-item"><span class="slbl">Ignition</span><span class="badge badge-off" id="b-ign">OFF</span></div>
+              <div class="state-item"><span class="slbl">Vibration</span><span class="badge badge-ok" id="b-vib">QUIET</span></div>
+              <div class="state-item"><span class="slbl">Relay</span><span class="badge badge-ok" id="b-relay">CLOSED</span></div>
+              <div class="state-item"><span class="slbl">Speed Alert</span><span class="badge badge-ok" id="b-spd">SAFE</span></div>
+            </div>
+            <div class="mc-foot text-muted mt4" id="val-coords">GPS: --</div>
+          </div>
+
+          <div class="panel log-panel">
+            <h3><i class="fa-solid fa-bell"></i> Live Activity Log</h3>
+            <div class="log-box" id="log-list">
+              <div class="log-item info"><span class="ltime">--:--:--</span><span>Waiting for telemetry...</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map -->
+        <div class="map-panel">
+          <div class="map-hdr">
+            <h3><i class="fa-solid fa-map-location-dot"></i> Live Tracking Map</h3>
+            <div class="map-controls">
+              <button class="btn-map-tile active" data-tile="street" title="Street view">🗺</button>
+              <button class="btn-map-tile" data-tile="satellite" title="Satellite view">🛰</button>
+              <button class="btn-map-tile" data-tile="terrain" title="Terrain view">🏔</button>
+              <button class="btn-map-tile" data-tile="dark" title="Dark map">🌙</button>
+            </div>
+            <div class="legend">
+              <span class="leg-item"><span class="leg-dot green"></span>Anchor</span>
+              <span class="leg-item"><span class="leg-dot blue"></span>Geofence</span>
+              <span class="leg-item"><span class="leg-dot orange"></span>Trail</span>
+            </div>
+          </div>
+          <div id="map"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ TAB 2 – FLEET VIEW ════ -->
+    <section class="tab" id="tab-fleet">
+      <div class="fleet-header">
+        <h2><i class="fa-solid fa-truck-fast"></i> Fleet Management Console</h2>
+        <p class="sub">Monitor and control all 5 simulated vehicles in real time.</p>
+      </div>
+      <div id="fleet-map-wrap">
+        <div id="fleet-map"></div>
+      </div>
+      <div class="fleet-cards" id="fleet-cards">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- ════ TAB 3 – ANALYTICS ════ -->
+    <section class="tab" id="tab-analytics">
+      <div class="analytics-header">
+        <h2><i class="fa-solid fa-chart-line"></i> Telemetry Analytics Dashboard</h2>
+        <button class="btn btn-secondary" id="btn-refresh-charts"><i class="fa-solid fa-rotate"></i> Refresh</button>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card full">
+          <h3>Speed History (km/h)</h3>
+          <canvas id="chart-speed"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Fuel Level (%)</h3>
+          <canvas id="chart-fuel"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Driver Score</h3>
+          <canvas id="chart-score"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Alert Type Breakdown</h3>
+          <canvas id="chart-alerts"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Alert Heatmap Preview</h3>
+          <div id="heat-map"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ TAB 4 – GEOFENCE MANAGER ════ -->
+    <section class="tab" id="tab-geofence">
+      <div class="geo-header">
+        <h2><i class="fa-solid fa-draw-polygon"></i> Multi-Zone Geofence Manager</h2>
+        <p class="sub">Draw zones on the map or add them manually. Vehicle is checked against all active zones.</p>
+      </div>
+      <div class="geo-body">
+        <div class="geo-controls panel">
+          <h3>Add Zone Manually</h3>
+          <div class="form-group">
+            <label>Zone Name</label>
+            <input type="text" id="zone-name" placeholder="e.g. Office Building" class="inp">
+          </div>
+          <div class="form-group">
+            <label>Latitude</label>
+            <input type="number" id="zone-lat" step="0.0001" placeholder="18.5204" class="inp">
+          </div>
+          <div class="form-group">
+            <label>Longitude</label>
+            <input type="number" id="zone-lon" step="0.0001" placeholder="73.8567" class="inp">
+          </div>
+          <div class="form-group">
+            <label>Radius (meters)</label>
+            <input type="number" id="zone-rad" value="150" class="inp">
+          </div>
+          <button class="btn btn-primary w100" id="btn-add-zone"><i class="fa-solid fa-plus"></i> Add Zone</button>
+          <button class="btn btn-secondary w100 mt8" id="btn-clear-zones"><i class="fa-solid fa-trash"></i> Clear Extra Zones</button>
+          <h3 class="mt16">Active Zones</h3>
+          <div id="zone-list" class="zone-list"></div>
+        </div>
+        <div id="geo-map" class="geo-map-box"></div>
+      </div>
+    </section>
+
+    <!-- ════ TAB 5 – SETTINGS ════ -->
+    <section class="tab" id="tab-settings">
+      <div class="settings-wrap">
+        <h2><i class="fa-solid fa-sliders"></i> System Settings</h2>
+
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3><i class="fa-solid fa-gauge-high"></i> Speed Limiter</h3>
+            <p class="tiny-desc">Alert triggers when vehicle exceeds this threshold.</p>
+            <div class="range-row">
+              <input type="range" id="s-speed-limit" min="30" max="130" value="80" class="range">
+              <span id="s-speed-val" class="range-val">80 km/h</span>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h3><i class="fa-solid fa-circle-dot"></i> Primary Geofence Radius</h3>
+            <p class="tiny-desc">Resize the main Home Base safety perimeter.</p>
+            <div class="range-row">
+              <input type="range" id="s-geo-radius" min="50" max="1000" value="200" class="range">
+              <span id="s-geo-val" class="range-val">200 m</span>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h3><i class="fa-brands fa-telegram"></i> Telegram Alerts</h3>
+            <p class="tiny-desc">Get instant messages when alarms fire.</p>
+            <input type="text" id="s-tg-token" placeholder="Bot Token (1234:ABC...)" class="inp">
+            <input type="text" id="s-tg-chat" placeholder="Chat ID (e.g. -100123456)" class="inp mt8">
+          </div>
+
+          <div class="settings-card">
+            <h3><i class="fa-brands fa-discord"></i> Discord Webhook</h3>
+            <p class="tiny-desc">Post rich embeds to a Discord channel.</p>
+            <input type="text" id="s-discord" placeholder="https://discord.com/api/webhooks/..." class="inp">
+          </div>
+
+          <div class="settings-card">
+            <h3><i class="fa-solid fa-volume-high"></i> Voice Alerts</h3>
+            <p class="tiny-desc">Browser speaks alert messages aloud using Web Speech API.</p>
+            <div class="toggle-row">
+              <span>Enable Voice Alerts</span>
+              <label class="sw"><input type="checkbox" id="s-voice" checked><span class="sw-slider"></span></label>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h3><i class="fa-solid fa-floppy-disk"></i> Apply Settings</h3>
+            <p class="tiny-desc">Save all changes and push to the simulator engine.</p>
+            <button class="btn btn-primary w100" id="btn-save-settings">
+              <i class="fa-solid fa-check"></i> Save All Settings
+            </button>
+            <div class="save-feedback hidden" id="save-feedback">✅ Settings saved!</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ TAB 6 – WIRING GUIDE ════ -->
+    <section class="tab" id="tab-wiring">
+      <div class="wiring-layout">
+        <div class="wiring-card panel">
+          <h3><i class="fa-solid fa-diagram-project"></i> ESP32 Hardware Pin Connections</h3>
+          <table class="wtable">
+            <thead><tr><th>Component</th><th>Pin</th><th>ESP32 GPIO</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><strong>NEO-6M GPS</strong></td><td>TXD</td><td>GPIO 16 (RX2)</td><td>HW Serial 2</td></tr>
+              <tr><td>NEO-6M GPS</td><td>RXD</td><td>GPIO 17 (TX2)</td><td>HW Serial 2</td></tr>
+              <tr><td>NEO-6M GPS</td><td>VCC</td><td>3.3V</td><td>Do NOT use 5V</td></tr>
+              <tr><td>NEO-6M GPS</td><td>GND</td><td>GND</td><td>Common ground</td></tr>
+              <tr class="divrow"><td><strong>SW-420 Vibration</strong></td><td>DO</td><td>GPIO 25</td><td>Digital interrupt</td></tr>
+              <tr><td>SW-420 Vibration</td><td>VCC</td><td>3.3V</td><td>–</td></tr>
+              <tr><td>SW-420 Vibration</td><td>GND</td><td>GND</td><td>–</td></tr>
+              <tr class="divrow"><td><strong>5V Relay</strong></td><td>IN (Signal)</td><td>GPIO 27</td><td>Active LOW</td></tr>
+              <tr><td>5V Relay</td><td>VCC</td><td>Vin (5V)</td><td>Not 3.3V</td></tr>
+              <tr><td>5V Relay</td><td>GND</td><td>GND</td><td>–</td></tr>
+              <tr class="divrow"><td><strong>Active Buzzer</strong></td><td>+</td><td>GPIO 26</td><td>Digital HIGH = ON</td></tr>
+              <tr><td>Active Buzzer</td><td>–</td><td>GND</td><td>–</td></tr>
+              <tr class="divrow"><td><strong>LED Green</strong></td><td>Anode</td><td>GPIO 32</td><td>220Ω series R</td></tr>
+              <tr><td><strong>LED Red</strong></td><td>Anode</td><td>GPIO 33</td><td>220Ω series R</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="wiring-card panel">
+          <h3><i class="fa-solid fa-circle-question"></i> Setup & Safety Notes</h3>
+          <div class="steps">
+            <div class="step"><div class="snum">1</div><div><h4>Common Ground</h4><p>All modules — ESP32, GPS, relay, sensors — MUST share a common GND. Isolated grounds cause garbage serial data.</p></div></div>
+            <div class="step"><div class="snum">2</div><div><h4>GPS Outdoors</h4><p>The NEO-6M needs clear sky view. Indoors it stays searching (solid LED). Take it outside or near a window.</p></div></div>
+            <div class="step"><div class="snum">3</div><div><h4>Relay Failsafe</h4><p>Wire the ignition through relay COM → NC. This means if ESP32 loses power, the circuit stays closed (engine stays startable — failsafe).</p></div></div>
+            <div class="step"><div class="snum">4</div><div><h4>Vehicle Power</h4><p>Use an LM2596 buck converter to step down 12V car battery → 5V ESP32 Vin. Never connect 12V directly.</p></div></div>
+            <div class="step"><div class="snum">5</div><div><h4>WiFi Credentials</h4><p>Store WiFi/API keys in a separate <code>config.h</code> and add it to <code>.gitignore</code>. Never commit secrets to GitHub.</p></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ TAB 7 – INTERVIEW PREP ════ -->
+    <section class="tab" id="tab-interview">
+      <div class="interview-hdr">
+        <h2><i class="fa-solid fa-graduation-cap"></i> IoT Interview Prep – Flip Cards</h2>
+        <p class="sub">Hover or click a card to reveal the model answer. Perfect for viva-voce, project reviews, and job interviews.</p>
+      </div>
+      <div class="flip-grid" id="flip-grid">
+        <!-- Cards injected by JS for cleanliness -->
+      </div>
+    </section>
+
+  </main><!-- /main-area -->
+</div><!-- /app-wrap -->
+
+<!-- Route Playback Modal -->
+<div class="modal-overlay hidden" id="playback-modal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3><i class="fa-solid fa-clapperboard"></i> Route Playback</h3>
+      <button class="modal-close" id="pb-close">✕</button>
+    </div>
+    <div id="pb-map"></div>
+    <div class="pb-controls">
+      <button class="btn btn-primary" id="pb-play"><i class="fa-solid fa-play"></i> Play</button>
+      <button class="btn btn-secondary" id="pb-reset"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+      <span class="pb-info" id="pb-info">Step 0 / 0</span>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
