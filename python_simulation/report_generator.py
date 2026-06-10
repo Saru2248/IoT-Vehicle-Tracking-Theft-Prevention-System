@@ -29,11 +29,17 @@ class PDFReport(FPDF):
         self.cell(0, 10, f'Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | IoT Course Project', 0, 0, 'R')
 
 def generate_pdf_report(csv_filepath, pdf_filepath):
-    """Parses telemetry CSV and generates a beautiful PDF report"""
-    # Create directory if it doesn't exist
+    """Parses telemetry CSV and generates a beautiful PDF report.
+
+    Raises RuntimeError with a human-readable message on filesystem or
+    data errors so Flask can return a clean 500 JSON response.
+    """
     pdf_dir = os.path.dirname(pdf_filepath)
-    if pdf_dir and not os.path.exists(pdf_dir):
-        os.makedirs(pdf_dir)
+    if pdf_dir:
+        try:
+            os.makedirs(pdf_dir, exist_ok=True)
+        except OSError as exc:
+            raise RuntimeError(f"Cannot create output directory '{pdf_dir}': {exc}") from exc
 
     # Read telemetry data
     telemetry_data = []
@@ -147,5 +153,8 @@ def generate_pdf_report(csv_filepath, pdf_filepath):
     pdf.set_text_color(100, 116, 139)
     pdf.multi_cell(0, 4, 'Note: This report is generated dynamically by the virtual simulation tracking engine. The GPS logs mimic actual vehicle paths under normal and security threat states. This system fulfills the requirements of IoT Course Project portfolio development.')
 
-    pdf.output(pdf_filepath)
-    print(f"PDF report successfully written to: {pdf_filepath}")
+    try:
+        pdf.output(pdf_filepath)
+        print(f"PDF report successfully written to: {pdf_filepath}")
+    except (OSError, IOError) as exc:
+        raise RuntimeError(f"Cannot write PDF to '{pdf_filepath}': {exc}") from exc
